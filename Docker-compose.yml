@@ -24,8 +24,14 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning:/etc/grafana/provisioning
     restart: unless-stopped
-
 volumes:
   grafana_data:
+downloader:
+    image: curlimages/curl:latest
+    volumes:
+      - ./grafana/provisioning/dashboards:/data
+    command: >
+      sh -c "curl -o /data/node-exporter.json
+      https://grafana.com/api/dashboards/1860/revisions/latest/download"
