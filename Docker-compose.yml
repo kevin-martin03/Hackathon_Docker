@@ -1,9 +1,9 @@
 ---
-# Service Prometheus
-version: '3'
+version: '3.8'
+
 services:
   prometheus:
-    image: prom/prometheus:v2.50.0  # Pin version for stability
+    image: prom/prometheus:v2.50.0
     container_name: prometheus
     ports:
       - "9090:9090"
@@ -11,12 +11,7 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     restart: unless-stopped
-volumes:
-  prometheus-data:
 
-# Service Grafana
-version: '3.8'
-services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -25,13 +20,21 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - downloader
+      - prometheus
     restart: unless-stopped
-volumes:
-  grafana_data:
-downloader:
+
+  downloader:
     image: curlimages/curl:latest
+    container_name: grafana-dashboard-downloader
     volumes:
       - ./grafana/provisioning/dashboards:/data
     command: >
-      sh -c "curl -o /data/node-exporter.json
+      sh -c "curl -L -o /data/node-exporter.json
       https://grafana.com/api/dashboards/1860/revisions/latest/download"
+    restart: "no"
+
+volumes:
+  prometheus-data:
+  grafana_data:
